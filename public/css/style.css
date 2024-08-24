@@ -25,7 +25,8 @@
   --main-bg-color: #0f0f0f;
   --light-blue: #03a9f4;
   --border-color: #0288d147;
-  --container-width: 500px;
+  --dark-blue: #028bca;
+  /* --container-width: 500px; */
 }
 
 body {
@@ -38,6 +39,10 @@ body {
   /* background: var(--main-bg-color); */
   height: 98vh;
   overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #333;
 }
 
 .logo {
