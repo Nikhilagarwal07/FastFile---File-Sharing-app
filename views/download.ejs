@@ -5,28 +5,34 @@
     <meta charset="UTF-8">
     <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Download | Nikhil's FileSharing app - File Sharing Made Easy</title>
+    <title>Download | FastFile - File Sharing Made Faster and Easier</title>
     <link rel="stylesheet" href="/css/style.css">
 </head>
 
 <body>
-    <img src="/img/logo.png" alt="Nikhil's FileSharing app logo" class="logo">
+    <img src="/img/logo.jpg" alt="FastFile app logo" class="logo">
 
     <section class="download">
-        <img class="download__icon" src="/img/download-sd.svg" alt="Nikhil's FileSharing-download">
+        <img class="download__icon" src="/img/download-sd.svg" alt="FastFile FileSharing-download">
         <% if(locals.error){ %>
-        <h4><%= locals.error %> 😏</h4>
-        <% } else { %>
-        <h2>Your file is ready to download</h2>
-        <p>Link expires in 24 hours</p>
-        <div class="download__meta">
-            <h4><%= fileName %></h4>
-            <small><%= parseInt(fileSize/1000) %> KB</small>
-        </div>
-        <div class="send-btn-container">
-            <a href="<%= downloadLink %>">Download file</a>
-        </div>
-        <% } %>
+            <h4>
+                <%= locals.error %> 😏
+            </h4>
+            <% } else { %>
+                <h2>Your file is ready to download</h2>
+                <p>Link expires in 24 hours</p>
+                <div class="download__meta">
+                    <h4>
+                        <%= fileName %>
+                    </h4>
+                    <small>
+                        <%= parseInt(fileSize/1000) %> KB
+                    </small>
+                </div>
+                <div class="send-btn-container">
+                    <a href="<%= downloadLink %>">Download file</a>
+                </div>
+                <% } %>
     </section>
 
     <!-- github fork button -->
