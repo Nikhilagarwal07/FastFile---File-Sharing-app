@@ -19,7 +19,7 @@ connectDB();
 const corsOptions = {
     origin: process.env.ALLOWED_CLIENTS.split(',')
 }
-app.use(cors(corsOptions))
+app.use(cors(corsOptions));
 //template engine ejs configure
 app.set('views', path.join(__dirname, '/views'));
 app.set('view engine','ejs');
