@@ -81,7 +81,7 @@ router.post('/send',async (req,res)=>{
         to: emailTo,
         subject: 'FastFile - file sharing app - By Nikhil',
         //text: `${emailFrom} shared a file with you`,
-        text: `fastfilesharingapp@gmail.com shared a file with you`,
+        text: 'fastfilesharingapp@gmail.com shared a file with you',
         html: require('../services/emailTemplate')({
             // emailFrom: emailFrom,
             emailFrom: 'fastfilesharingapp@gmail.com',
