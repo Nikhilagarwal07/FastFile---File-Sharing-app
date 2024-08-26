@@ -15,44 +15,69 @@ let storage = multer.diskStorage({
     }
 })
 
+// let upload = multer({
+//     storage: storage,
+//     limit: {fileSize: 10000000*100},
+
+// }).single('firstfile');
 let upload = multer({
     storage: storage,
-    limit: {fileSize: 10000000*100},
+    limits: { fileSize: 10000000 * 100 },
+}).array('files'); // allow multiple file uploads
 
-}).single('firstfile');
 
+// router.post('/', (req,res)=>{
 
-router.post('/', (req,res)=>{
-   
+//     //store incoming file in uplaods folder
+//     upload(req,res, async (err)=>{
+//     //validate request
+//         if(!req.file){
+//             return res.json({ error : 'All fields are required'});
 
-    //store incoming file in uplaods folder
-    upload(req,res, async (err)=>{
-    //validate request
-        if(!req.file){
-            return res.json({ error : 'All fields are required'});
+//         }
+//         if(err){
+//             return res.status(500).send({error: err.message})
+//         }
+//     //store into database
+//         const file = new File({
+//             filename: req.file.filename,
+//             uuid: uuid4(),
+//             path: req.file.path,
+//             size: req.file.size
+//         });
 
+//         const response = await file.save();
+//         return res.json({file: `${process.env.APP_BASE_URL}/files/${response.uuid}`});
+//         //http://localhost:3000/files/235657gjhgdcjha-3u2r326tbc2bkjd
+//     });
+
+//     //send response (link for downloading)
+// })
+router.post('/', (req, res) => {
+    upload(req, res, async (err) => {
+        if (!req.files || req.files.length === 0) {
+            return res.json({ error: 'All fields are required' });
         }
-        if(err){
-            return res.status(500).send({error: err.message})
+        if (err) {
+            return res.status(500).send({ error: err.message });
         }
-    //store into database
-        const file = new File({
-            filename: req.file.filename,
-            uuid: uuid4(),
-            path: req.file.path,
-            size: req.file.size
-        });
 
-        const response = await file.save();
-        return res.json({file: `${process.env.APP_BASE_URL}/files/${response.uuid}`});
-        //http://localhost:3000/files/235657gjhgdcjha-3u2r326tbc2bkjd
+        let fileLinks = [];
+        for (let file of req.files) {
+            const newFile = new File({
+                filename: file.filename,
+                uuid: uuid4(),
+                path: file.path,
+                size: file.size,
+            });
+
+            const response = await newFile.save();
+            fileLinks.push(`${process.env.APP_BASE_URL}/files/${response.uuid}`);
+        }
+        return res.json({ files: fileLinks });
     });
+});
 
-
-
-
-    //send response (link for downloading)
-})
 
 router.post('/send',async (req,res)=>{
     //validate request
