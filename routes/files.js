@@ -1,24 +1,58 @@
 const router = require('express').Router();
 const multer = require('multer');
 const path = require('path');
-const fs = require('fs');
-const archiver = require('archiver');
 const File = require('../models/file');
-const { v4: uuid4 } = require('uuid');
+const {v4: uuid4} = require('uuid');
 
+//basic config of multer
 let storage = multer.diskStorage({
-    destination: (req, file, cb) => cb(null, 'uploads/'),
-    filename: (req, file, cb) => {
-        const uniqueName = `${Date.now()}-${Math.round(Math.random() * 1E9)}${path.extname(file.originalname)}`;
-        cb(null, uniqueName);
+    //passing config
+    destination: (req,file,cb)=> cb(null,'uploads/'),
+    filename: (req,file,cb)=> {
+        //unique name must be generated for file
+        const uniqueName = `${Date.now()}-${Math.round(Math.random()*1E9)}${path.extname(file.originalname)}`;
+        cb(null,uniqueName);
     }
-});
+})
 
+// let upload = multer({
+//     storage: storage,
+//     limit: {fileSize: 10000000*100},
+
+// }).single('firstfile');
 let upload = multer({
     storage: storage,
     limits: { fileSize: 10000000 * 100 },
-}).array('files');
+}).array('files'); // allow multiple file uploads
 
+
+// router.post('/', (req,res)=>{
+
+//     //store incoming file in uplaods folder
+//     upload(req,res, async (err)=>{
+//     //validate request
+//         if(!req.file){
+//             return res.json({ error : 'All fields are required'});
+
+//         }
+//         if(err){
+//             return res.status(500).send({error: err.message})
+//         }
+//     //store into database
+//         const file = new File({
+//             filename: req.file.filename,
+//             uuid: uuid4(),
+//             path: req.file.path,
+//             size: req.file.size
+//         });
+
+//         const response = await file.save();
+//         return res.json({file: `${process.env.APP_BASE_URL}/files/${response.uuid}`});
+//         //http://localhost:3000/files/235657gjhgdcjha-3u2r326tbc2bkjd
+//     });
+
+//     //send response (link for downloading)
+// })
 router.post('/', (req, res) => {
     upload(req, res, async (err) => {
         if (!req.files || req.files.length === 0) {
@@ -28,94 +62,63 @@ router.post('/', (req, res) => {
             return res.status(500).send({ error: err.message });
         }
 
-        if (req.files.length === 1) {
-            // Only one file uploaded, no need to zip
-            const file = new File({
-                filename: req.files[0].filename,
+        let fileLinks = [];
+        for (let file of req.files) {
+            const newFile = new File({
+                filename: file.filename,
                 uuid: uuid4(),
-                path: req.files[0].path,
-                size: req.files[0].size
+                path: file.path,
+                size: file.size,
             });
 
-            const response = await file.save();
-            return res.json({ file: `${process.env.APP_BASE_URL}/files/${response.uuid}` });
-
-        } else {
-            // Multiple files uploaded, zip them
-            const zipFileName = `${uuid4()}.zip`;
-            const zipFilePath = path.join(__dirname, `../uploads/${zipFileName}`);
-
-            const output = fs.createWriteStream(zipFilePath);
-            const archive = archiver('zip', {
-                zlib: { level: 9 } // Sets the compression level
-            });
-
-            output.on('close', async () => {
-                const file = new File({
-                    filename: zipFileName,
-                    uuid: uuid4(),
-                    path: zipFilePath,
-                    size: archive.pointer()
-                });
-
-                const response = await file.save();
-                return res.json({ file: `${process.env.APP_BASE_URL}/files/${response.uuid}` });
-            });
-
-            archive.on('error', (err) => {
-                throw err;
-            });
-
-            archive.pipe(output);
-
-            // Add each file to the zip archive
-            req.files.forEach(file => {
-                archive.file(file.path, { name: file.originalname });
-            });
-
-            await archive.finalize();
+            const response = await newFile.save();
+            fileLinks.push(`${process.env.APP_BASE_URL}/files/${response.uuid}`);
         }
+        return res.json({ files: fileLinks });
     });
 });
 
-router.post('/send', async (req, res) => {
-    const { uuid, emailTo, emailFrom } = req.body;
-    if (!uuid || !emailTo || !emailFrom) {
-        return res.status(422).send({ error: 'All fields are required' });
+
+router.post('/send',async (req,res)=>{
+    //validate request
+    const { uuid, emailTo} = req.body;
+    if(!uuid || !emailTo){
+        return res.status(422).send({error: 'All fields are required'});
     }
 
-    // Find the file in the database using the uuid
-    const file = await File.findOne({ uuid: uuid });
-    if (!file) {
-        return res.status(404).send({ error: 'File not found' });
+    //get data from database
+    const file = await File.findOne({uuid: uuid});
+    if(file.sender){
+        return res.status(422).send({error: 'Email already sent'});
     }
 
-    if (file.sender) {
-        return res.status(422).send({ error: 'Email already sent' });
-    }
-
-    file.sender = emailFrom;
+    // file.sender = emailFrom;
+    file.sender = 'fastfilesharingapp@gmail.com';
     file.receiver = emailTo;
 
     const response = await file.save();
 
-    // Send the email
+
+    //send email
     const sendMail = require('../services/emailService');
     sendMail({
-        from: emailFrom,
+        //from: emailFrom,
         to: emailTo,
-        subject: 'Files shared via FastFile',
-        text: `${emailFrom} shared files with you`,
+        subject: 'FastFile - file sharing app - By Nikhil',
+        //text: `${emailFrom} shared a file with you`,
+        text: 'fastfilesharingapp@gmail.com shared a file with you',
         html: require('../services/emailTemplate')({
-            emailFrom: emailFrom,
+            // emailFrom: emailFrom,
+            emailFrom: 'fastfilesharingapp@gmail.com',
             downloadLink: `${process.env.APP_BASE_URL}/files/${file.uuid}`,
-            size: `${(file.size / (1024 * 1024)).toFixed(2)} MB`, // Display size in MB
+            size: parseInt(file.size/1000) + 'KB',
             expires: '24 hours'
         })
+
     });
 
-    return res.send({ success: true });
-});
+    return res.send({success: true});
 
+});
 
 module.exports = router;
