@@ -77,56 +77,14 @@ fileURL.addEventListener("click", () => {
   fileURL.select();
 });
 
-// const uploadFile = () => {
-//   console.log("file added uploading");
-
-//   files = fileInput.files;
-//   const formData = new FormData();
-//   formData.append("firstfile", files[0]);
-
-//   //show the uploader
-//   progressContainer.style.display = "block";
-
-//   // upload file
-//   const xhr = new XMLHttpRequest();
-
-//   // listen for upload progress
-//   xhr.upload.onprogress = function (event) {
-//     // find the percentage of uploaded
-//     let percent = Math.round((100 * event.loaded) / event.total);
-//     progressPercent.innerText = percent;
-//     const scaleX = `scaleX(${percent / 100})`;
-//     bgProgress.style.transform = scaleX;
-//     progressBar.style.transform = scaleX;
-//   };
-
-//   // handle error
-//   xhr.upload.onerror = function () {
-//     showToast(`Error in upload: ${xhr.status}.`);
-//     fileInput.value = ""; // reset the input
-//   };
-
-//   // listen for response which will give the link
-//   xhr.onreadystatechange = function () {
-//     if (xhr.readyState == XMLHttpRequest.DONE) {
-//       onFileUploadSuccess(xhr.responseText);
-//     }
-//   };
-
-//   xhr.open("POST", uploadURL);
-//   xhr.send(formData);
-// };
 const uploadFile = () => {
-  console.log("files added, uploading");
+  console.log("file added uploading");
 
-  const files = fileInput.files;
+  files = fileInput.files;
   const formData = new FormData();
+  formData.append("firstfile", files[0]);
 
-  for (let i = 0; i < files.length; i++) {
-      formData.append("files", files[i]);
-  }
-
-  // show the uploader
+  //show the uploader
   progressContainer.style.display = "block";
 
   // upload file
@@ -134,56 +92,45 @@ const uploadFile = () => {
 
   // listen for upload progress
   xhr.upload.onprogress = function (event) {
-      let percent = Math.round((100 * event.loaded) / event.total);
-      progressPercent.innerText = percent;
-      const scaleX = `scaleX(${percent / 100})`;
-      bgProgress.style.transform = scaleX;
-      progressBar.style.transform = scaleX;
+    // find the percentage of uploaded
+    let percent = Math.round((100 * event.loaded) / event.total);
+    progressPercent.innerText = percent;
+    const scaleX = `scaleX(${percent / 100})`;
+    bgProgress.style.transform = scaleX;
+    progressBar.style.transform = scaleX;
   };
 
+  // handle error
   xhr.upload.onerror = function () {
-      showToast(`Error in upload: ${xhr.status}.`);
-      fileInput.value = ""; // reset the input
+    showToast(`Error in upload: ${xhr.status}.`);
+    fileInput.value = ""; // reset the input
   };
 
+  // listen for response which will give the link
   xhr.onreadystatechange = function () {
-      if (xhr.readyState == XMLHttpRequest.DONE) {
-          onFileUploadSuccess(xhr.responseText);
-      }
+    if (xhr.readyState == XMLHttpRequest.DONE) {
+      onFileUploadSuccess(xhr.responseText);
+    }
   };
 
   xhr.open("POST", uploadURL);
   xhr.send(formData);
 };
 
-// const onFileUploadSuccess = (res) => {
-//   fileInput.value = ""; // reset the input
-//   status.innerText = "Uploaded";
-
-//   // remove the disabled attribute from form btn & make text send
-//   emailForm[2].removeAttribute("disabled");
-//   emailForm[2].innerText = "Send";
-//   progressContainer.style.display = "none"; // hide the box
-
-//   const { file: url } = JSON.parse(res);
-//   console.log(url);
-//   sharingContainer.style.display = "block";
-//   fileURL.value = url;
-// };
 const onFileUploadSuccess = (res) => {
   fileInput.value = ""; // reset the input
   status.innerText = "Uploaded";
 
+  // remove the disabled attribute from form btn & make text send
   emailForm[2].removeAttribute("disabled");
   emailForm[2].innerText = "Send";
-  progressContainer.style.display = "none";
+  progressContainer.style.display = "none"; // hide the box
 
-  const { files: urls } = JSON.parse(res);
-  console.log(urls);
+  const { file: url } = JSON.parse(res);
+  console.log(url);
   sharingContainer.style.display = "block";
-  fileURL.value = urls.join('\n'); // display all URLs in the text area
+  fileURL.value = url;
 };
-
 
 emailForm.addEventListener("submit", (e) => {
   e.preventDefault(); // Stop submission
